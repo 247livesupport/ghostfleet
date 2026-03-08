@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Granted | Ghost Fleet Commander</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
+        
+        body { font-family: 'JetBrains Mono', monospace; }
+        .terminal-bg { background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); }
+        .success-glow { box-shadow: 0 0 80px -20px rgba(34, 197, 94, 0.2); }
+        .locked { opacity: 0.15; pointer-events: none; filter: blur(4px); transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .unlocked { opacity: 1; pointer-events: auto; filter: blur(0px); }
+
+        /* Cyberpunk Header Style */
+        .cyber-header {
+            -webkit-text-fill-color: transparent; 
+            -webkit-text-stroke-width: 1px;
+            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+            -webkit-background-clip: text; 
+            -webkit-text-stroke-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.4));
+        }
+
+        @keyframes scan {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .animate-scan { animation: scan 2s linear infinite; }
+    </style>
+</head>
+<body class="terminal-bg text-slate-200 min-h-screen flex items-center justify-center p-6 selection:bg-green-500/30">
+
+    <div id="main-container" class="max-w-2xl w-full bg-slate-900/40 border border-green-500/20 rounded-[2.5rem] p-8 md:p-12 success-glow relative overflow-hidden backdrop-blur-xl">
+        
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-500/10 rounded-full mb-6 border border-green-500/20">
+                <i class="fas fa-shield-check text-4xl text-green-500"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-black mb-2 uppercase tracking-tighter cyber-header">Access Granted</h1>
+            <p id="status-msg" class="text-slate-500 font-mono text-[10px] tracking-[0.4em] uppercase">Initialising Handshake...</p>
+        </div>
+
+        <div class="bg-black/40 p-6 rounded-2xl border border-white/5 mb-8">
+            <h3 class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-3">Protocol Agreement</h3>
+            <p class="text-slate-400 text-xs leading-relaxed mb-6 italic">
+                Assets are released for authorized professional use only. By unlocking, you assume full liability for deployment parameters.
+            </p>
+            <label class="flex items-center space-x-4 cursor-pointer group bg-white/5 p-4 rounded-xl border border-transparent hover:border-green-500/30 transition-all">
+                <input type="checkbox" id="legal-agree" class="w-5 h-5 rounded border-slate-700 bg-slate-800 text-green-600 focus:ring-0 focus:ring-offset-0">
+                <span class="text-[10px] text-white font-black group-hover:text-green-400 transition uppercase tracking-widest">Accept Ethical Terms</span>
+            </label>
+        </div>
+
+        <div id="gated-content" class="locked space-y-6">
+            <div class="p-8 bg-black/60 rounded-3xl border border-white/5 text-center relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent"></div>
+                <h3 class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.5em] mb-4">Master Activation License</h3>
+                
+                <div id="license-display" class="text-xl md:text-2xl font-black text-green-500 tracking-[0.2em] mb-6">GENERATING...</div>
+                
+                <div class="flex justify-center gap-3">
+                    <button onclick="copyKey(this)" class="bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl text-[10px] uppercase font-black tracking-widest transition border border-white/5">
+                        <i class="fas fa-copy mr-2"></i> Copy
+                    </button>
+                    <button onclick="downloadLicense()" class="bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl text-[10px] uppercase font-black tracking-widest transition border border-white/5">
+                        <i class="fas fa-file-download mr-2"></i> Save .txt
+                    </button>
+                </div>
+            </div>
+            <div class="bg-red-500/5 border border-red-500/20 p-6 rounded-2xl mb-6 flex items-center justify-between">
+    <div>
+        <p class="text-[9px] font-bold text-red-400 uppercase tracking-[0.3em] mb-1">zip PASS is 3834</p>
+       <p id="zip-pass" class="text-xl font-mono text-white font-black tracking-widest">3834</p>
+        </div>
+    <button onclick="copyZipPass()" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition">
+        <i class="fas fa-key"></i>
+    </button>
+</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="./GhostFleet.zip" class="flex items-center justify-center gap-3 bg-green-600 hover:bg-green-500 text-white font-black py-5 rounded-2xl transition uppercase text-xs tracking-widest shadow-lg shadow-green-900/20">
+                    <i class="fas fa-download"></i> Ghost Fleet v7.2
+                </a>
+                <a href="./Ghostfleet.mp4" download class="flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-700 text-white font-black py-5 rounded-2xl transition uppercase text-xs tracking-widest">
+                    <i class="fas fa-video"></i> Proof Logs
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://agdpkcrevzoajrjhsobm.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFnZHBrY3JldnpvYWpyamhzb2JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTgyMDYsImV4cCI6MjA4ODE3NDIwNn0.5UqE7jC_Yt2Xb-pqWqXix1o3ac_45hjbsdNhhPPxlZQ';
+        
+        let supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const urlParams = new URLSearchParams(window.location.search);
+        const confirmedPaymentId = urlParams.get('NP_id');
+
+        async function generateLicense() {
+            const display = document.getElementById('license-display');
+            const savedKey = localStorage.getItem('ghost_fleet_key');
+            if (savedKey) { display.innerText = savedKey; return; }
+
+            try {
+                const { data } = await supabaseClient.from('claims').select('license_key').eq('payment_id', confirmedPaymentId).single();
+                if (data) {
+                    localStorage.setItem('ghost_fleet_key', data.license_key);
+                    display.innerText = data.license_key;
+                    return;
+                }
+
+                const s1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                const s2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                const s3 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                const newKey = `GHOST-${s1}-${s2}-${s3}`;
+                
+                await supabaseClient.from('claims').insert([{ payment_id: confirmedPaymentId, license_key: newKey }]);
+                localStorage.setItem('ghost_fleet_key', newKey);
+                display.innerText = newKey;
+            } catch (err) {
+                display.innerText = "RETRYING SYNC...";
+                setTimeout(generateLicense, 2000);
+            }
+        }
+
+        async function verify() {
+            if (confirmedPaymentId === "TEST") {
+                document.getElementById('status-msg').innerText = "Developer Bypass Active";
+                return;
+            }
+            if (!confirmedPaymentId) {
+                document.body.innerHTML = "<div class='text-center'><h1 class='text-red-500 font-black text-4xl'>403: UNAUTHORIZED</h1><p class='text-slate-500 mt-4'>Handshake failure. No Payment ID detected.</p></div>";
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://api.nowpayments.io/v1/payment/${confirmedPaymentId}`, {
+                    headers: { 'x-api-key': 'MTFKY9Q-PJ2MCH5-PCNHXKB-983GXMR' }
+                });
+                const data = await res.json();
+
+                if (data.payment_status === 'finished' || data.payment_status === 'confirmed') {
+                    document.getElementById('status-msg').innerText = "Handshake Confirmed. Assets Ready.";
+                } else {
+                    document.getElementById('main-container').innerHTML = `
+                        <div class="text-center py-10">
+                            <h2 class='text-yellow-500 font-black text-2xl uppercase tracking-tighter'>Verification Pending</h2>
+                            <div class="w-full h-1 bg-white/5 my-8 relative overflow-hidden rounded-full">
+                                <div class="absolute inset-0 bg-yellow-500 animate-scan"></div>
+                            </div>
+                            <p class='text-slate-400 text-xs mb-8'>Status: ${data.payment_status?.toUpperCase() || 'AWAITING BLOCKCHAIN'}</p>
+                            <button onclick="location.reload()" class="bg-white/5 hover:bg-white/10 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition">Refresh Terminal</button>
+                        </div>`;
+                }
+            } catch (e) { document.getElementById('status-msg').innerText = "Network Lag. Auto-retrying..."; }
+        }
+
+        document.getElementById('legal-agree').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('gated-content').classList.replace('locked', 'unlocked');
+                generateLicense();
+            }
+        });
+
+        function copyZipPass() {
+        const pass = document.getElementById('zip-pass').innerText;
+        navigator.clipboard.writeText(pass);
+        alert("Decryption key copied. Use this to extract the ZIP.");
+    }
+
+        function copyKey(btn) {
+            navigator.clipboard.writeText(document.getElementById('license-display').innerText);
+            const original = btn.innerHTML;
+            btn.innerHTML = "<i class='fas fa-check text-green-500'></i> Copied";
+            setTimeout(() => btn.innerHTML = original, 2000);
+        }
+
+        function downloadLicense() {
+            const content = `GHOST FLEET PRO 7\nLICENSE: ${document.getElementById('license-display').innerText}\nID: ${confirmedPaymentId}`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.download = 'GHOST_FLEET_LICENSE.txt'; a.href = URL.createObjectURL(blob); a.click();
+        }
+
+        window.onload = verify;
+
+    </script>
+</body>
+</html>
